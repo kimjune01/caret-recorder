@@ -19,9 +19,12 @@ export const IPC = {
 
   // Sidecar events from main → renderer
   SIDECAR_EVENT: 'sidecar:event',
+
+  // LiveKit config from main → renderer
+  GET_LIVEKIT_CONFIG: 'config:get-livekit',
 } as const;
 
-// Config constants
+// Recording/capture constants (safe for both main and renderer)
 export const CONFIG = {
   SEGMENT_DURATION_MS: 5 * 60 * 1000, // 5 minutes
   RECORDINGS_DIR: 'Terac/Recordings',
@@ -30,7 +33,11 @@ export const CONFIG = {
   FRAME_RATE: 30,
   WIDTH: 1920,
   HEIGHT: 1080,
-  LIVEKIT_URL: process.env.LIVEKIT_URL || 'ws://localhost:7880',
-  LIVEKIT_TOKEN: process.env.LIVEKIT_TOKEN || '',
   DATA_COLLECT_INTERVAL_MS: 1000,
 } as const;
+
+// LiveKit config — only used in main process, passed to renderer via IPC
+export interface LiveKitConfig {
+  url: string;
+  token: string;
+}

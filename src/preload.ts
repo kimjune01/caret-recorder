@@ -21,4 +21,8 @@ contextBridge.exposeInMainWorld('terac', {
     ipcRenderer.invoke(IPC.SAVE_CONTEXT, filename, data),
   stateChanged: (state: string) =>
     ipcRenderer.send(IPC.STATE_CHANGED, state),
+
+  // Config from main process
+  getLiveKitConfig: () =>
+    ipcRenderer.invoke(IPC.GET_LIVEKIT_CONFIG),
 });

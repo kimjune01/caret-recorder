@@ -6,15 +6,17 @@ import {
   LocalAudioTrack,
   VideoPresets,
 } from 'livekit-client';
-import { CONFIG } from './shared/types';
+import { LiveKitConfig } from './shared/types';
 
 export class LiveKitPublisher {
   private room: Room;
   private videoTrack: LocalVideoTrack | null = null;
   private audioTrack: LocalAudioTrack | null = null;
   private connected = false;
+  private config: LiveKitConfig;
 
-  constructor() {
+  constructor(config: LiveKitConfig) {
+    this.config = config;
     this.room = new Room({
       dynacast: true,
       adaptiveStream: false,
@@ -34,26 +36,19 @@ export class LiveKitPublisher {
   }
 
   async connect(): Promise<void> {
-    if (!CONFIG.LIVEKIT_URL || !CONFIG.LIVEKIT_TOKEN) {
-      console.warn('[LiveKit] No URL/token configured, skipping connection');
-      return;
+    if (!this.config.url || !this.config.token) {
+      throw new Error('LiveKit URL and token are required. Set LIVEKIT_URL and LIVEKIT_TOKEN environment variables.');
     }
 
-    try {
-      await this.room.connect(CONFIG.LIVEKIT_URL, CONFIG.LIVEKIT_TOKEN);
-      this.connected = true;
-      console.log('[LiveKit] Connected to room:', this.room.name);
-    } catch (err) {
-      console.error('[LiveKit] Connection failed:', err);
-      throw err;
-    }
+    await this.room.connect(this.config.url, this.config.token);
+    this.connected = true;
+    console.log('[LiveKit] Connected to room:', this.room.name);
   }
 
   async publish(stream: MediaStream): Promise<void> {
     if (!this.connected) {
       await this.connect();
     }
-    if (!this.connected) return;
 
     const videoTracks = stream.getVideoTracks();
     const audioTracks = stream.getAudioTracks();

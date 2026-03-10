@@ -1,4 +1,4 @@
-import { AppState } from './shared/types';
+import { AppState, LiveKitConfig } from './shared/types';
 import { startCapture } from './capture';
 import { SegmentedRecorder } from './recorder';
 import { LiveKitPublisher } from './livekit';
@@ -13,6 +13,7 @@ declare const window: Window & {
     saveSegment: (filename: string, data: ArrayBuffer) => Promise<void>;
     saveContext: (filename: string, data: string) => Promise<void>;
     stateChanged: (state: string) => void;
+    getLiveKitConfig: () => Promise<LiveKitConfig>;
   };
 };
 
@@ -35,16 +36,18 @@ async function handleStart(): Promise<void> {
 
   try {
     stream = await startCapture();
-    sessionTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    recorder = new SegmentedRecorder(stream);
-    recorder.start();
-    setState(AppState.Recording);
-
-    // Start flushing context data periodically
-    contextFlushTimer = setInterval(flushContext, 30_000);
   } catch (err) {
-    console.error('[Renderer] Failed to start capture:', err);
+    console.error('[Renderer] Failed to start capture. Is screen recording permission granted?', err);
+    return;
   }
+
+  sessionTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  recorder = new SegmentedRecorder(stream);
+  recorder.start();
+  setState(AppState.Recording);
+
+  // Start flushing context data periodically
+  contextFlushTimer = setInterval(flushContext, 30_000);
 }
 
 async function handleStop(): Promise<void> {
@@ -52,12 +55,16 @@ async function handleStop(): Promise<void> {
 
   // Unpublish from LiveKit first
   if (livekit) {
-    await livekit.unpublish();
+    try { await livekit.unpublish(); } catch (err) {
+      console.error('[Renderer] Error unpublishing from LiveKit:', err);
+    }
   }
 
   // Stop recorder and flush final segment
   if (recorder) {
-    await recorder.stop();
+    try { await recorder.stop(); } catch (err) {
+      console.error('[Renderer] Error stopping recorder:', err);
+    }
     recorder = null;
   }
 
@@ -83,19 +90,23 @@ async function handleToggleLiveKit(): Promise<void> {
   if (state === AppState.Publishing) {
     // Unpublish but keep recording
     if (livekit) {
-      await livekit.unpublish();
+      try { await livekit.unpublish(); } catch (err) {
+        console.error('[Renderer] Error unpublishing:', err);
+      }
     }
     setState(AppState.Recording);
   } else {
     // Start publishing
-    if (!livekit) {
-      livekit = new LiveKitPublisher();
-    }
     try {
+      if (!livekit) {
+        const config = await window.terac.getLiveKitConfig();
+        livekit = new LiveKitPublisher(config);
+      }
       await livekit.publish(stream);
       setState(AppState.Publishing);
     } catch (err) {
       console.error('[Renderer] Failed to publish to LiveKit:', err);
+      // Stay in Recording state — don't break local recording
     }
   }
 }

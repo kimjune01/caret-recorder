@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import { createInterface, Interface } from 'readline';
 import path from 'path';
+import fs from 'fs';
 import { app } from 'electron';
 import { EventEmitter } from 'events';
 import { SidecarEvent } from './types';
@@ -26,10 +27,21 @@ export class SidecarManager extends EventEmitter {
     const binaryPath = this.getSidecarPath();
     console.log(`[SidecarManager] Starting: ${binaryPath}`);
 
+    // Verify binary exists
+    if (!fs.existsSync(binaryPath)) {
+      console.error(`[SidecarManager] Binary not found: ${binaryPath}`);
+      console.error('[SidecarManager] Build it with: cd sidecar-swift && swift build && cp .build/debug/terac-sidecar ../sidecar-bin/observer-sidecar');
+      return;
+    }
+
+    // Strip Electron-specific env vars that interfere with native binaries
+    const env = { ...process.env };
+    delete env.ELECTRON_RUN_AS_NODE;
+
     try {
       this.process = spawn(binaryPath, [], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env,
       });
     } catch (err) {
       console.error('[SidecarManager] Failed to spawn:', err);
@@ -48,7 +60,8 @@ export class SidecarManager extends EventEmitter {
         const event: SidecarEvent = JSON.parse(line);
         this.emit('event', event);
       } catch {
-        console.warn('[SidecarManager] Failed to parse:', line.slice(0, 200));
+        // Non-JSON output from sidecar (e.g. Swift print statements)
+        console.log('[SidecarManager]', line);
       }
     });
 
@@ -65,13 +78,10 @@ export class SidecarManager extends EventEmitter {
     this.process.on('exit', (code, signal) => {
       console.log(`[SidecarManager] Exited: code=${code} signal=${signal}`);
       this.cleanup();
-      if (!this.stopped && code !== 0) {
+      if (!this.stopped && signal !== 'SIGTERM') {
         this.scheduleRestart();
       }
     });
-
-    // Reset retry count on successful start
-    this.retryCount = 0;
   }
 
   stop(): void {
@@ -102,12 +112,12 @@ export class SidecarManager extends EventEmitter {
   private scheduleRestart(): void {
     if (this.stopped || this.restartTimer) return;
     if (this.retryCount >= this.maxRetries) {
-      console.error(`[SidecarManager] Max retries (${this.maxRetries}) exceeded`);
+      console.error(`[SidecarManager] Max retries (${this.maxRetries}) exceeded, giving up`);
       return;
     }
     const delay = Math.min(1000 * Math.pow(2, this.retryCount), 30000);
     this.retryCount++;
-    console.log(`[SidecarManager] Restarting in ${delay}ms (attempt ${this.retryCount})`);
+    console.log(`[SidecarManager] Restarting in ${delay}ms (attempt ${this.retryCount}/${this.maxRetries})`);
     this.restartTimer = setTimeout(() => {
       this.restartTimer = null;
       this.start();

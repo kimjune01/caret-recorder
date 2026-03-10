@@ -1,8 +1,48 @@
-import { Tray, Menu, nativeImage, BrowserWindow } from 'electron';
-import path from 'path';
+import { Tray, Menu, nativeImage } from 'electron';
 import { AppState } from './shared/types';
 
 type TrayCommand = 'start' | 'stop' | 'toggle-livekit' | 'quit';
+
+// Generate a 32x32 RGBA circle icon (renders as 16x16 @2x on macOS retina)
+function createCircleIcon(r: number, g: number, b: number): Electron.NativeImage {
+  const size = 32;
+  const buf = Buffer.alloc(size * size * 4);
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = size / 2 - 2; // 1px padding
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = x - cx + 0.5;
+      const dy = y - cy + 0.5;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const offset = (y * size + x) * 4;
+
+      if (dist <= radius) {
+        // Inside circle — anti-alias the edge
+        const alpha = Math.min(1, radius - dist + 0.5);
+        buf[offset] = r;
+        buf[offset + 1] = g;
+        buf[offset + 2] = b;
+        buf[offset + 3] = Math.round(alpha * 255);
+      }
+      // Outside circle: stays 0,0,0,0 (transparent)
+    }
+  }
+
+  return nativeImage.createFromBuffer(buf, {
+    width: size,
+    height: size,
+    scaleFactor: 2.0,
+  });
+}
+
+// Pre-generate all three icons
+const ICONS = {
+  [AppState.Idle]: createCircleIcon(136, 136, 136),       // gray
+  [AppState.Recording]: createCircleIcon(255, 59, 48),     // red
+  [AppState.Publishing]: createCircleIcon(52, 199, 89),    // green
+};
 
 export class TrayManager {
   private tray: Tray | null = null;
@@ -15,15 +55,14 @@ export class TrayManager {
   }
 
   create(): void {
-    // Create a simple 16x16 circle icon (gray = idle)
-    this.tray = new Tray(this.getIcon());
+    this.tray = new Tray(ICONS[AppState.Idle]);
     this.tray.setToolTip('Terac Recorder — Idle');
     this.updateMenu();
   }
 
   setState(state: AppState): void {
     this.state = state;
-    this.tray?.setImage(this.getIcon());
+    this.tray?.setImage(ICONS[state]);
     this.tray?.setToolTip(this.getTooltip());
     this.updateMenu();
   }
@@ -41,24 +80,6 @@ export class TrayManager {
     }[this.state];
     const appLabel = this.currentApp ? ` | ${this.currentApp}` : '';
     return `Terac Recorder — ${stateLabel}${appLabel}`;
-  }
-
-  private getIcon(): Electron.NativeImage {
-    // Generate colored circle icons programmatically
-    const color = {
-      [AppState.Idle]: '#888888',
-      [AppState.Recording]: '#FF3B30',
-      [AppState.Publishing]: '#34C759',
-    }[this.state];
-
-    // Create a simple 16x16 PNG with a colored circle
-    // Using a data URL for a simple circle
-    const size = 16;
-    const canvas = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
-      <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 1}" fill="${color}"/>
-    </svg>`;
-    const dataUrl = `data:image/svg+xml;base64,${Buffer.from(canvas).toString('base64')}`;
-    return nativeImage.createFromDataURL(dataUrl).resize({ width: 16, height: 16 });
   }
 
   private updateMenu(): void {

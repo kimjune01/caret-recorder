@@ -11,8 +11,14 @@ import fs from 'node:fs';
 import started from 'electron-squirrel-startup';
 import { TrayManager } from './tray';
 import { SidecarManager } from './sidecar/sidecar-manager';
-import { AppState, IPC, CONFIG } from './shared/types';
+import { AppState, IPC, CONFIG, LiveKitConfig } from './shared/types';
 import { SidecarEvent, SidecarEventType, FrontmostAppPayload } from './sidecar/types';
+
+// LiveKit config from environment (read in main process where process.env exists)
+const livekitConfig: LiveKitConfig = {
+  url: process.env.LIVEKIT_URL || 'ws://localhost:7880',
+  token: process.env.LIVEKIT_TOKEN || '',
+};
 
 if (started) app.quit();
 
@@ -158,6 +164,9 @@ ipcMain.handle(
     await fs.promises.appendFile(filePath, data, 'utf-8');
   },
 );
+
+// Provide LiveKit config to renderer
+ipcMain.handle(IPC.GET_LIVEKIT_CONFIG, () => livekitConfig);
 
 // Update tray state when renderer reports state change
 ipcMain.on(IPC.STATE_CHANGED, (_event, state: AppState) => {
