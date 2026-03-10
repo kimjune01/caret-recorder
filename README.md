@@ -168,6 +168,17 @@ Sidecar stdout → SidecarManager.readline → parsed JSON
 6. **Single monitor** — Captures primary display only; multi-monitor selection is not exposed in UI
 7. **LiveKit data channel 15KB limit** — Large traversal payloads are chunked automatically, but receiver must reassemble
 
+## Testing
+
+```bash
+npm test                        # Run all 62 tests
+npm run test:watch              # Watch mode
+npm run test:coverage           # Coverage report
+npm test -- --reporter=verbose  # See all test names mapped to spec
+```
+
+Tests cover all TAKEHOME.md spec requirements: 1080p/30fps capture, system audio, 5-min WebM segments, LiveKit publish/unpublish, system tray states, sidecar crash recovery, and clean shutdown ordering. The sidecar binary integration test runs automatically when the binary is present and is skipped otherwise.
+
 ## What I'd Improve With More Time
 
 - **Upload pipeline** — Background upload of segments to S3/GCS with retry logic
@@ -176,4 +187,4 @@ Sidecar stdout → SidecarManager.readline → parsed JSON
 - **Performance profiling** — Measure actual CPU/memory impact of dual-recorder approach
 - **Auto-reconnect LiveKit** — The SDK handles it, but re-publishing tracks after reconnect needs explicit handling
 - **Sidecar binary signing** — Move from `extraResource` to `Frameworks/` for proper macOS code signing
-- **End-to-end tests** — Automated verification of segment integrity, LiveKit track presence, shutdown behavior
+- **End-to-end tests** — Playwright/Spectron for full Electron lifecycle (segment files on disk, LiveKit track presence)
