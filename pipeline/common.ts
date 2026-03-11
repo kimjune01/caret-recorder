@@ -30,6 +30,18 @@ export interface PerceptionEvent {
   metadata: Record<string, unknown>;
 }
 
+export type SourceType = 'terminal' | 'code_editor' | 'conversation' | 'browser' | 'other';
+
+export type LLMFn = (text: string, systemPrompt: string) => Promise<string>;
+
+export interface Moment {
+  timestamp_ms: number;
+  source_app: string;
+  source_type: SourceType;
+  content: string;              // condensed markdown
+  context: PerceptionEvent[];   // surrounding non-traversal events
+}
+
 // Map sidecar event types to pipeline event types.
 // Returns null for events we skip.
 export function mapSidecarEventType(
