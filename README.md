@@ -1,6 +1,13 @@
 # Caret Desktop Recorder
 
-An Electron menu bar app that provides background screen + system audio recording, publishes to a LiveKit room, saves local recording segments to disk, and runs a Swift sidecar for macOS accessibility context (a11y tree traversal, app-specific parsers).
+Background screen recording + system audio capture desktop app with LiveKit WebRTC integration. Built with Electron, TypeScript, and a native Swift sidecar for macOS accessibility APIs.
+
+- **Screen + system audio capture** via ScreenCaptureKit (macOS 13+), no virtual audio driver needed
+- **LiveKit WebRTC publishing** — publish/unpublish screen share tracks without interrupting local recording
+- **Gapless segment rotation** — dual overlapping MediaRecorder instances for seamless 5-minute WebM chunks
+- **Swift accessibility sidecar** — real-time a11y tree traversal with 13 app-specific parsers (Chrome, Slack, Zoom, etc.)
+- **Menu bar app** — system tray UI with 3-state icons, no Dock presence
+- **75 tests** covering capture, recording, LiveKit, tray, sidecar crash recovery, and shutdown ordering
 
 ## Architecture
 
