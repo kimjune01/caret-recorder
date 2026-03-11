@@ -1,4 +1,4 @@
-# Terac Desktop Recorder
+# Caret Desktop Recorder
 
 An Electron menu bar app that provides background screen + system audio recording, publishes to a LiveKit room, saves local recording segments to disk, and runs a Swift sidecar for macOS accessibility context (a11y tree traversal, app-specific parsers).
 
@@ -63,15 +63,14 @@ The sidecar is a Swift executable in `sidecar-swift/` that uses macOS Accessibil
 
 ```bash
 cd sidecar-swift
-swift build --product terac-sidecar
+swift build --product caret-sidecar
 mkdir -p ../sidecar-bin
-cp .build/debug/terac-sidecar ../sidecar-bin/observer-sidecar
+cp .build/debug/caret-sidecar ../sidecar-bin/observer-sidecar
 ```
 
 ### Install & Run
 
 ```bash
-cd terac-recorder
 npm install
 npm start
 ```
@@ -99,7 +98,7 @@ Grant both in System Settings > Privacy & Security. The app may need a restart a
 ## Usage
 
 1. Launch the app — it appears as a **gray circle** in the menu bar (no Dock icon)
-2. Click the tray icon > **Start Recording** — icon turns **red**, segments start saving to `~/Documents/Terac/Recordings/`
+2. Click the tray icon > **Start Recording** — icon turns **red**, segments start saving to `~/Documents/Caret/Recordings/`
 3. Click > **Start Publishing** — icon turns **green**, screen + audio publish to LiveKit room
 4. Click > **Stop Publishing** — returns to red, local recording continues
 5. Click > **Stop Recording** — finalizes last segment, icon returns to gray
@@ -108,7 +107,7 @@ Grant both in System Settings > Privacy & Security. The app may need a restart a
 ### Recording Output
 
 ```
-~/Documents/Terac/Recordings/
+~/Documents/Caret/Recordings/
 ├── 2025-01-15T10-30-00-000Z_000.webm   # Video segment 1
 ├── 2025-01-15T10-30-00-000Z_001.webm   # Video segment 2
 └── context-2025-01-15T10-30-00-000Z.jsonl  # Sidecar context data
@@ -117,7 +116,7 @@ Grant both in System Settings > Privacy & Security. The app may need a restart a
 ## Project Structure
 
 ```
-terac-recorder/
+caret-recorder/
 ├── src/
 │   ├── main.ts              — Electron entry, Chromium flags, hidden window, IPC
 │   ├── tray.ts              — System tray icon + context menu (3 states)
@@ -133,7 +132,7 @@ terac-recorder/
 │       └── types.ts            — AppState enum, IPC channels, config constants
 ├── sidecar-swift/           — Swift sidecar source (macOS a11y observer)
 │   ├── Package.swift
-│   └── Sources/TeracSidecar/
+│   └── Sources/CaretSidecar/
 │       ├── main.swift
 │       ├── FrontmostAppObserver.swift
 │       ├── AccessibilityTraversal.swift
@@ -149,7 +148,7 @@ terac-recorder/
 
 ```
 Screen + Audio → getDisplayMedia → MediaStream
-  ├── SegmentedRecorder → WebM segments → disk (~/Documents/Terac/Recordings/)
+  ├── SegmentedRecorder → WebM segments → disk (~/Documents/Caret/Recordings/)
   └── LiveKitPublisher → Track.Source.ScreenShare + ScreenShareAudio → LiveKit room
 
 Sidecar stdout → SidecarManager.readline → parsed JSON
@@ -171,15 +170,15 @@ Sidecar stdout → SidecarManager.readline → parsed JSON
 ## Testing
 
 ```bash
-npm test                        # Run all 62 tests
+npm test                        # Run all tests
 npm run test:watch              # Watch mode
 npm run test:coverage           # Coverage report
-npm test -- --reporter=verbose  # See all test names mapped to spec
+npm test -- --reporter=verbose  # See all test names
 ```
 
-Tests cover all TAKEHOME.md spec requirements: 1080p/30fps capture, system audio, 5-min WebM segments, LiveKit publish/unpublish, system tray states, sidecar crash recovery, and clean shutdown ordering. The sidecar binary integration test runs automatically when the binary is present and is skipped otherwise.
+Tests cover: 1080p/30fps capture, system audio, 5-min WebM segments, LiveKit publish/unpublish, system tray states, sidecar crash recovery, and clean shutdown ordering. The sidecar binary integration test runs automatically when the binary is present and is skipped otherwise.
 
-## What I'd Improve With More Time
+## Improvements
 
 - **Upload pipeline** — Background upload of segments to S3/GCS with retry logic
 - **ffmpeg transcoding** — Convert WebM segments to MP4 (H.264+AAC) post-capture for wider compatibility

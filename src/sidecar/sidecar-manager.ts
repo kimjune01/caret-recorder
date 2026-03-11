@@ -30,7 +30,7 @@ export class SidecarManager extends EventEmitter {
     // Verify binary exists
     if (!fs.existsSync(binaryPath)) {
       console.error(`[SidecarManager] Binary not found: ${binaryPath}`);
-      console.error('[SidecarManager] Build it with: cd sidecar-swift && swift build && cp .build/debug/terac-sidecar ../sidecar-bin/observer-sidecar');
+      console.error('[SidecarManager] Build it with: cd sidecar-swift && swift build && cp .build/debug/caret-sidecar ../sidecar-bin/observer-sidecar');
       return;
     }
 

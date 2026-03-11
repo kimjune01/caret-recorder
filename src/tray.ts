@@ -56,7 +56,7 @@ export class TrayManager {
 
   create(): void {
     this.tray = new Tray(ICONS[AppState.Idle]);
-    this.tray.setToolTip('Terac Recorder — Idle');
+    this.tray.setToolTip('Caret Recorder — Idle');
     this.updateMenu();
   }
 
@@ -79,7 +79,7 @@ export class TrayManager {
       [AppState.Publishing]: 'Recording + Publishing',
     }[this.state];
     const appLabel = this.currentApp ? ` | ${this.currentApp}` : '';
-    return `Terac Recorder — ${stateLabel}${appLabel}`;
+    return `Caret Recorder — ${stateLabel}${appLabel}`;
   }
 
   private updateMenu(): void {

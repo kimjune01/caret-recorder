@@ -27,7 +27,7 @@ export const IPC = {
 // Recording/capture constants (safe for both main and renderer)
 export const CONFIG = {
   SEGMENT_DURATION_MS: 5 * 60 * 1000, // 5 minutes
-  RECORDINGS_DIR: 'Terac/Recordings',
+  RECORDINGS_DIR: 'Caret/Recordings',
   VIDEO_CODEC: 'video/webm;codecs=vp8,opus',
   VIDEO_BITRATE: 2_500_000, // 2.5 Mbps
   FRAME_RATE: 30,

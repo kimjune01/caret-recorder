@@ -2,7 +2,7 @@ import AppKit
 import ApplicationServices
 import Foundation
 
-// MARK: - Terac Sidecar
+// MARK: - Caret Sidecar
 // Monitors the frontmost application using macOS Accessibility APIs.
 // Outputs JSON Lines to stdout for consumption by the Electron host.
 

@@ -17,9 +17,9 @@ const config: ForgeConfig = {
     extendInfo: {
       LSUIElement: true,
       NSScreenCaptureUsageDescription:
-        'Terac Recorder needs screen recording access to capture your screen.',
+        'Caret Recorder needs screen recording access to capture your screen.',
       NSAudioCaptureUsageDescription:
-        'Terac Recorder needs audio access to capture system audio.',
+        'Caret Recorder needs audio access to capture system audio.',
     },
   },
   rebuildConfig: {},

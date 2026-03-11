@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC } from './shared/types';
 
-contextBridge.exposeInMainWorld('terac', {
+contextBridge.exposeInMainWorld('caret', {
   // Commands from main process
   onStartRecording: (callback: () => void) =>
     ipcRenderer.on(IPC.START_RECORDING, callback),

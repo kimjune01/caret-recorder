@@ -13,10 +13,10 @@ vi.mock('fix-webm-duration', () => ({
   default: (...args: unknown[]) => mockFixWebmDuration(...args),
 }));
 
-// Install window.terac mock
+// Install window.caret mock
 Object.defineProperty(globalThis, 'window', {
   value: {
-    terac: {
+    caret: {
       saveSegment: mockSaveSegment,
     },
   },

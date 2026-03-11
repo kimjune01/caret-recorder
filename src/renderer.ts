@@ -5,7 +5,7 @@ import { LiveKitPublisher } from './livekit';
 import { SidecarEvent, SidecarEventType } from './sidecar/types';
 
 declare const window: Window & {
-  terac: {
+  caret: {
     onStartRecording: (callback: () => void) => void;
     onStopRecording: (callback: () => void) => void;
     onToggleLiveKit: (callback: () => void) => void;
@@ -27,7 +27,7 @@ let sessionTimestamp: string | null = null;
 
 function setState(newState: AppState): void {
   state = newState;
-  window.terac.stateChanged(state);
+  window.caret.stateChanged(state);
   console.log(`[Renderer] State: ${state}`);
 }
 
@@ -99,7 +99,7 @@ async function handleToggleLiveKit(): Promise<void> {
     // Start publishing
     try {
       if (!livekit) {
-        const config = await window.terac.getLiveKitConfig();
+        const config = await window.caret.getLiveKitConfig();
         livekit = new LiveKitPublisher(config);
       }
       await livekit.publish(stream);
@@ -135,16 +135,16 @@ async function flushContext(): Promise<void> {
   const filename = `context-${sessionTimestamp}.jsonl`;
 
   try {
-    await window.terac.saveContext(filename, data);
+    await window.caret.saveContext(filename, data);
   } catch (err) {
     console.error('[Renderer] Failed to save context:', err);
   }
 }
 
 // Wire up IPC commands
-window.terac.onStartRecording(handleStart);
-window.terac.onStopRecording(handleStop);
-window.terac.onToggleLiveKit(handleToggleLiveKit);
-window.terac.onSidecarEvent(handleSidecarEvent);
+window.caret.onStartRecording(handleStart);
+window.caret.onStopRecording(handleStop);
+window.caret.onToggleLiveKit(handleToggleLiveKit);
+window.caret.onSidecarEvent(handleSidecarEvent);
 
 console.log('[Renderer] Orchestrator initialized');

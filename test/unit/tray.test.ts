@@ -51,21 +51,21 @@ describe('TrayManager — system tray states', () => {
     tray = new TrayManager(onCommand);
   });
 
-  it('create() sets idle tooltip: "Terac Recorder — Idle"', () => {
+  it('create() sets idle tooltip: "Caret Recorder — Idle"', () => {
     tray.create();
-    expect(mockSetToolTip).toHaveBeenCalledWith('Terac Recorder — Idle');
+    expect(mockSetToolTip).toHaveBeenCalledWith('Caret Recorder — Idle');
   });
 
   it('setState(Recording) updates tooltip to "Recording"', () => {
     tray.create();
     tray.setState(AppState.Recording);
-    expect(mockSetToolTip).toHaveBeenCalledWith('Terac Recorder — Recording');
+    expect(mockSetToolTip).toHaveBeenCalledWith('Caret Recorder — Recording');
   });
 
   it('setState(Publishing) updates tooltip to "Recording + Publishing"', () => {
     tray.create();
     tray.setState(AppState.Publishing);
-    expect(mockSetToolTip).toHaveBeenCalledWith('Terac Recorder — Recording + Publishing');
+    expect(mockSetToolTip).toHaveBeenCalledWith('Caret Recorder — Recording + Publishing');
   });
 
   it('setState() updates the tray icon', () => {
@@ -133,14 +133,14 @@ describe('TrayManager — system tray states', () => {
   it('setCurrentApp() updates tooltip with app name', () => {
     tray.create();
     tray.setCurrentApp('VS Code');
-    expect(mockSetToolTip).toHaveBeenCalledWith('Terac Recorder — Idle | VS Code');
+    expect(mockSetToolTip).toHaveBeenCalledWith('Caret Recorder — Idle | VS Code');
   });
 
   it('setCurrentApp() includes app in all states', () => {
     tray.create();
     tray.setCurrentApp('Safari');
     tray.setState(AppState.Recording);
-    expect(mockSetToolTip).toHaveBeenCalledWith('Terac Recorder — Recording | Safari');
+    expect(mockSetToolTip).toHaveBeenCalledWith('Caret Recorder — Recording | Safari');
   });
 
   it('destroy() cleans up the tray', () => {

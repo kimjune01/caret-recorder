@@ -42,10 +42,10 @@ const {
   };
 });
 
-// Install window.terac before import
+// Install window.caret before import
 Object.defineProperty(globalThis, 'window', {
   value: {
-    terac: {
+    caret: {
       onStartRecording: vi.fn((cb: () => void) => { callbacksRef.start = cb; }),
       onStopRecording: vi.fn((cb: () => void) => { callbacksRef.stop = cb; }),
       onToggleLiveKit: vi.fn((cb: () => void) => { callbacksRef.toggleLivekit = cb; }),

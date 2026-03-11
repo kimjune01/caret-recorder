@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "terac-sidecar",
+    name: "caret-sidecar",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "terac-sidecar",
-            path: "Sources/TeracSidecar"
+            name: "caret-sidecar",
+            path: "Sources/CaretSidecar"
         ),
     ]
 )

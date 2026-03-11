@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { CONFIG, AppState } from '../../src/shared/types';
 
-describe('CONFIG constants — TAKEHOME.md spec compliance', () => {
+describe('CONFIG constants — spec compliance', () => {
   it('captures at 1080p resolution', () => {
     expect(CONFIG.WIDTH).toBe(1920);
     expect(CONFIG.HEIGHT).toBe(1080);
@@ -22,8 +22,8 @@ describe('CONFIG constants — TAKEHOME.md spec compliance', () => {
     expect(CONFIG.SEGMENT_DURATION_MS).toBe(300_000);
   });
 
-  it('saves recordings to Terac/Recordings directory', () => {
-    expect(CONFIG.RECORDINGS_DIR).toBe('Terac/Recordings');
+  it('saves recordings to Caret/Recordings directory', () => {
+    expect(CONFIG.RECORDINGS_DIR).toBe('Caret/Recordings');
   });
 
   it('collects data every second for smooth segment boundaries', () => {

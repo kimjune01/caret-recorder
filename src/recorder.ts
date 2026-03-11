@@ -2,7 +2,7 @@ import fixWebmDuration from 'fix-webm-duration';
 import { CONFIG } from './shared/types';
 
 declare const window: Window & {
-  terac: {
+  caret: {
     saveSegment: (filename: string, data: ArrayBuffer) => Promise<void>;
   };
 };
@@ -132,7 +132,7 @@ export class SegmentedRecorder {
           const filename = `${this.sessionTimestamp}_${String(this.segmentIndex).padStart(3, '0')}.webm`;
           this.segmentIndex++;
 
-          await window.terac.saveSegment(filename, buffer);
+          await window.caret.saveSegment(filename, buffer);
           console.log(`[Recorder] Saved segment: ${filename} (${(buffer.byteLength / 1024 / 1024).toFixed(1)}MB)`);
         } catch (err) {
           console.error('[Recorder] Failed to save segment:', err);
