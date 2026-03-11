@@ -164,6 +164,41 @@ Sidecar stdout → SidecarManager.readline → parsed JSON
   └── Main process → tray tooltip (current app name)
 ```
 
+## Perception Pipeline
+
+Offline pipeline that processes recorded JSONL into condensed markdown moments. See `docs/pipeline.md` for full architecture.
+
+```
+adapters → dedup → buffer → stripper → condensation → moments
+```
+
+The first four stages are mechanical (no LLM). Condensation uses source-specific prompts to extract signal from stripped accessibility tree diffs.
+
+### LLM Setup
+
+Condensation requires [Codex CLI](https://github.com/openai/codex) for LLM calls (gpt-5.4 via ChatGPT account):
+
+```bash
+npm install -g @openai/codex
+codex login
+```
+
+Then run the full pipeline on recorded data:
+
+```bash
+npx tsx pipeline/run_pipeline.ts ~/Documents/Caret/Recordings/context-*.jsonl
+```
+
+### Pipeline Tests & Benchmarks
+
+```bash
+npx tsx pipeline/test_dedup.ts
+npx tsx pipeline/test_buffer.ts
+npx tsx pipeline/test_stripper.ts
+npx tsx pipeline/test_condensation.ts
+npx tsx pipeline/bench_pipeline.ts ~/Documents/Caret/Recordings/context-*.jsonl
+```
+
 ## Known Limitations
 
 1. **WebM not MP4** — MediaRecorder API limitation in Chromium. VP8+Opus produces WebM; converting to MP4 would require ffmpeg post-processing

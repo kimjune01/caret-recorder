@@ -115,8 +115,9 @@ export async function* condense(
     // Call LLM
     const content = await llm(strippedText, systemPrompt);
 
-    // Empty response means no signal
-    if (!content || content.trim().length === 0) {
+    // Empty response means no signal (strip quotes too — LLM sometimes returns '""')
+    const trimmed = content.trim().replace(/^["']+|["']+$/g, '');
+    if (!trimmed || trimmed.length === 0) {
       continue;
     }
 
@@ -125,7 +126,7 @@ export async function* condense(
       timestamp_ms: event.timestamp_ms,
       source_app: event.app_name ?? 'unknown',
       source_type: sourceType,
-      content: content.trim(),
+      content: trimmed,
       context: [...contextBuffer],
     };
 
