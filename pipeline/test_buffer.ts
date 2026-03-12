@@ -252,6 +252,66 @@ async function testTypingThenDeletion(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Terminal Accumulation Tests
+// ---------------------------------------------------------------------------
+
+async function testTerminalAccumulation(): Promise<void> {
+  console.log('  buffer: terminal diffs accumulate into one event');
+  const events = [
+    makeTraversal('iTerm2', [{ role: 'AXTextArea', value: '$ npm start' }], 1000),
+    makeTraversal('iTerm2', [{ role: 'AXStaticText', value: '> build complete' }], 2000),
+    makeTraversal('iTerm2', [{ role: 'AXStaticText', value: '> server ready' }], 3000),
+  ];
+
+  const result = await collect(buffer(asyncFrom(events)));
+  assert(result.length === 1, `expected 1 event, got ${result.length}`);
+  assert(result[0].elements!.length === 3, `expected 3 merged elements, got ${result[0].elements!.length}`);
+}
+
+async function testTerminalFlushOnTimeout(): Promise<void> {
+  console.log('  buffer: terminal flushes on timeout then starts new buffer');
+  const events = [
+    makeTraversal('iTerm2', [{ role: 'AXTextArea', value: '$ cmd1' }], 1000),
+    makeTraversal('iTerm2', [{ role: 'AXStaticText', value: 'output1' }], 2000),
+    makeTraversal('iTerm2', [{ role: 'AXTextArea', value: '$ cmd2' }], 8000), // 6s gap > 5s
+  ];
+
+  const result = await collect(buffer(asyncFrom(events), { timeoutMs: 5000 }));
+  assert(result.length === 2, `expected 2 events, got ${result.length}`);
+  assert(result[0].elements!.length === 2, 'first event should have 2 merged elements');
+  assert(result[1].elements!.length === 1, 'second event should have 1 element');
+}
+
+async function testTerminalFlushOnAppSwitch(): Promise<void> {
+  console.log('  buffer: terminal flushes on app_switch');
+  const events = [
+    makeTraversal('iTerm2', [{ role: 'AXTextArea', value: '$ npm test' }], 1000),
+    makeTraversal('iTerm2', [{ role: 'AXStaticText', value: '5 passed' }], 2000),
+    makeEvent({ event_type: 'app_switch', app_name: 'iTerm2', timestamp_ms: 3000 }),
+  ];
+
+  const result = await collect(buffer(asyncFrom(events)));
+  assert(result.length === 2, `expected 2 events (merged traversal + app_switch), got ${result.length}`);
+  assert(result[0].event_type === 'traversal', 'first should be merged traversal');
+  assert(result[0].elements!.length === 2, 'merged traversal should have 2 elements');
+  assert(result[1].event_type === 'app_switch', 'second should be app_switch');
+}
+
+async function testNonTerminalStillUsesSuperset(): Promise<void> {
+  console.log('  buffer: non-terminal apps still use superset check');
+  // "Code" is not in ACCUMULATE_APPS, so non-superset diffs should flush
+  const events = [
+    makeTraversal('Code', [{ role: 'AXTextArea', value: 'line 1' }], 1000),
+    makeTraversal('Code', [{ role: 'AXTextArea', value: 'line 2' }], 2000), // not superset
+  ];
+
+  const result = await collect(buffer(asyncFrom(events)));
+  assert(result.length === 2, `expected 2 events, got ${result.length}`);
+  assert(result[0].elements![0].value === 'line 1', 'first should be "line 1"');
+  assert(result[1].elements![0].value === 'line 2', 'second should be "line 2"');
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 
@@ -269,6 +329,12 @@ async function testTypingThenDeletion(): Promise<void> {
   await testEndOfStreamFlush();
   await testTypingScenario();
   await testTypingThenDeletion();
+
+  console.log('--- Terminal Accumulation ---');
+  await testTerminalAccumulation();
+  await testTerminalFlushOnTimeout();
+  await testTerminalFlushOnAppSwitch();
+  await testNonTerminalStillUsesSuperset();
 
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);

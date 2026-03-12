@@ -13,8 +13,19 @@
 
 import type { PerceptionEvent, AccessibilityElement } from './common';
 
+/** Apps where diffs are additive fragments (not superset replacements). */
+const ACCUMULATE_APPS = new Set([
+  'iTerm2',
+  'Terminal',
+  'Alacritty',
+  'kitty',
+  'Warp',
+  'Hyper',
+]);
+
 export interface BufferOptions {
-  timeoutMs?: number; // default 5000
+  timeoutMs?: number;             // default 5000
+  accumulateApps?: Set<string>;   // override ACCUMULATE_APPS
 }
 
 /** Extract text from elements: value ?? title ?? description per element, joined by \n. */
@@ -40,6 +51,7 @@ export async function* buffer(
   opts?: BufferOptions,
 ): AsyncGenerator<PerceptionEvent> {
   const timeoutMs = opts?.timeoutMs ?? 5000;
+  const accumulateApps = opts?.accumulateApps ?? ACCUMULATE_APPS;
 
   // Per-window buffers: key = app_name + '::' + window_title
   const buffers = new Map<string, BufferedEntry>();
@@ -104,8 +116,19 @@ export async function* buffer(
       continue;
     }
 
-    // Superset check: new text contains the buffered text
-    if (newText.includes(existing.text)) {
+    // Terminal apps: diffs are additive fragments, always concatenate
+    if (accumulateApps.has(event.app_name ?? '')) {
+      const mergedText = existing.text + '\n' + newText;
+      const mergedElements = [...(existing.event.elements ?? []), ...event.elements];
+      const mergedEvent: PerceptionEvent = {
+        ...event,
+        elements: mergedElements,
+        metadata: { ...event.metadata, buffer_merged: true },
+      };
+      buffers.set(key, { event: mergedEvent, text: mergedText });
+    }
+    // Other apps: superset check (typing accumulation)
+    else if (newText.includes(existing.text)) {
       // Accumulate — replace buffer with newer (superset) event
       buffers.set(key, { event, text: newText });
     } else {
