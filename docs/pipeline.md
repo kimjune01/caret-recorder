@@ -216,6 +216,8 @@ for await (const event of strip(buffer(deduplicate(readCaretEvents(file))))) {
 
 Reads `metadata.stripped_text` from the stripper stage. Missing/empty → skip.
 
+**TODO**: Iterate on source-specific prompts against real recordings. Current prompts are first drafts — terminal works well, but code_editor, browser, and conversation need tuning with more data.
+
 **Input:** Stripped diffs from the previous stage.
 
 **Output:** An ordered list of `Moment` objects — markdown snippets carrying the condensed signal from each user-produced diff, with surrounding context events (app switches, focus changes) attached as metadata.
