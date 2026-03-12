@@ -261,6 +261,34 @@ async function testElementsReplacedWithFiltered(): Promise<void> {
   assert(result[0].elements![0].role === 'AXStaticText', 'surviving element should be AXStaticText');
 }
 
+function testSanitizesControlChars(): void {
+  console.log('  sanitize: null bytes and control chars stripped from text');
+  const md = elementToMarkdown({
+    role: 'AXTextArea',
+    value: 'hello\0world\x01foo\x1Fbar',
+  });
+  assert(!md.includes('\0'), 'should not contain null byte');
+  assert(!md.includes('\x01'), 'should not contain SOH');
+  assert(!md.includes('\x1F'), 'should not contain US');
+  assert(md === 'helloworldfoobar', `got: "${md}"`);
+}
+
+function testSanitizesInHeadingAndLink(): void {
+  console.log('  sanitize: heading title and link description sanitized');
+  const heading = elementToMarkdown({
+    role: 'AXHeading',
+    title: 'My\0Title',
+  });
+  assert(heading === '## MyTitle', `heading got: "${heading}"`);
+
+  const link = elementToMarkdown({
+    role: 'AXLink',
+    title: 'Click\0Here',
+    description: 'https://example\0.com',
+  });
+  assert(link === '[ClickHere](https://example.com)', `link got: "${link}"`);
+}
+
 // ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
@@ -268,6 +296,10 @@ async function testElementsReplacedWithFiltered(): Promise<void> {
 (async () => {
   console.log('--- Markdown Conversion ---');
   testMarkdownConversion();
+
+  console.log('--- Sanitization ---');
+  testSanitizesControlChars();
+  testSanitizesInHeadingAndLink();
 
   console.log('--- Role Filtering ---');
   testRoleFiltering();

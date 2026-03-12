@@ -26,27 +26,35 @@ export interface StripOptions {
   minChars?: number;          // near-empty threshold (default 10)
 }
 
+/** Strip null bytes and control characters from a11y text. */
+function sanitize(s: string): string {
+  return s.replace(/\0/g, '').replace(/[\x01-\x08\x0B\x0C\x0E-\x1F]/g, '');
+}
+
 /** Convert a single element to markdown based on its role. */
 export function elementToMarkdown(el: AccessibilityElement): string {
+  const title = el.title ? sanitize(el.title) : undefined;
+  const value = el.value ? sanitize(el.value) : undefined;
+  const description = el.description ? sanitize(el.description) : undefined;
   switch (el.role) {
     case 'AXHeading':
-      return `## ${el.title ?? ''}`;
+      return `## ${title ?? ''}`;
     case 'AXLink':
-      if (el.description) {
-        return `[${el.title ?? ''}](${el.description})`;
+      if (description) {
+        return `[${title ?? ''}](${description})`;
       }
-      return el.title ?? el.value ?? '';
+      return title ?? value ?? '';
     case 'AXTextArea':
     case 'AXTextField':
-      return el.value ?? el.title ?? '';
+      return value ?? title ?? '';
     case 'AXStaticText':
-      return el.value ?? el.title ?? '';
+      return value ?? title ?? '';
     case 'AXCell':
-      return el.value ?? el.title ?? '';
+      return value ?? title ?? '';
     case 'AXWebArea':
-      return el.title ?? el.value ?? '';
+      return title ?? value ?? '';
     default:
-      return el.value ?? el.title ?? el.description ?? '';
+      return value ?? title ?? description ?? '';
   }
 }
 
