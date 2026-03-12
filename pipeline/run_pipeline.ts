@@ -7,6 +7,7 @@ import { deduplicate } from './dedup';
 import { buffer } from './buffer';
 import { strip } from './stripper';
 import { condense } from './condensation';
+import { deduplicateMoments } from './moment_dedup';
 import { codexLLM } from './llm_codex';
 import type { PerceptionEvent, Moment } from './common';
 
@@ -27,9 +28,11 @@ async function* concatFiles(
 }
 
 (async () => {
-  const pipeline = condense(
-    strip(buffer(deduplicate(concatFiles(files)))),
-    { llm: codexLLM },
+  const pipeline = deduplicateMoments(
+    condense(
+      strip(buffer(deduplicate(concatFiles(files)))),
+      { llm: codexLLM },
+    ),
   );
 
   let count = 0;
